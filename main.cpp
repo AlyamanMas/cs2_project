@@ -106,17 +106,27 @@ string read_pattern_file(string &test_file_path) {
 int main() {
     string corpus_full_path = "/home/yaman/CLionProjects/cs2-project/corpus";
     string test_file_full_path = "/home/yaman/CLionProjects/cs2-project/test.txt";
-    string text = "Hello World! How are you?";
-    string pattern = read_pattern_file(test_file_full_path);
-
+    vector<string> pattern_sentences_v = split_paragraph_into_sentences(read_pattern_file(test_file_full_path));
     // map<filename, file_content_string> from corpus
-    map<string, string> files = return_files(corpus_full_path);
-    int index = rabin_karp_search(text, pattern);
+    map<string, string> files_map = return_files(corpus_full_path);
 
-    if (index != -1) {
-        cout << "Pattern found at index: " << index << endl;
-    } else {
-        cout << "Pattern not found in the text." << endl;
+    for (auto pattern_sentence: pattern_sentences_v) {
+        bool found = false;
+        for (auto file: files_map) {
+            // calculate time for searching
+            int index = rabin_karp_search(file.second, pattern_sentence);
+            int index_brute = brute_force_search(file.second, pattern_sentence);
+            if (index != -1) {
+                cout << "Sentence: " << pattern_sentence << "\nwas found at index " << index << " in file: "
+                     << file.first << "\n\n";
+//                cout << "Sentence: " << pattern_sentence << "\nwas found at index " << index_brute << " in file: "
+//                     << file.first << "\n\n";
+                found = true;
+            }
+        }
+        if (!found) {
+            cout << "Pattern \"" << pattern_sentence << "\" not found in any file" << endl;
+        }
     }
     return 0;
 }
