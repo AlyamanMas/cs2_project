@@ -62,7 +62,7 @@ int rabin_karp_search(string &text, string &pattern) {
 }
 
 // Iterator for corpus_full_path from files in folder 'corpus'
-map<string, string> return_files(string& corpus_full_path) {
+map<string, string> return_files(string &corpus_full_path) {
     map<string, string> files;
     auto files_iterator = filesystem::directory_iterator(corpus_full_path);
 
@@ -76,29 +76,40 @@ map<string, string> return_files(string& corpus_full_path) {
         files[entry.path().filename().string()] = file_string;
     }
     return files;
+}
 
-//    vector<string> files;
-//    namespace fs = filesystem;
-//    auto files_iterator = fs::directory_iterator(corpus_full_path);
-//    vector<string> files;
-//
-//    for (const auto &entry: files_iterator) {
-//        ifstream file(entry.path());
-//        string file_string;
-//        string line;
-//        while (getline(file, line)) {
-//            file_string.append(line);
-//        }
-//        files.push_back(file_string);
-//    }
-//    return files;
+vector<string> split_paragraph_into_sentences(string paragraph) {
+    vector<string> sentences;
+    string sentence;
+    for (char i: paragraph) {
+        if (i == '.' || i == '?' || i == '!' || i == '\n') {
+            sentence += i;
+            sentences.push_back(sentence);
+            sentence = "";
+        } else {
+            sentence += i;
+        }
+    }
+    return sentences;
+}
+
+string read_pattern_file(string &test_file_path) {
+    ifstream file(test_file_path);
+    string pattern_string;
+    string line;
+    while (getline(file, line)) {
+        pattern_string.append(line);
+    }
+    return pattern_string;
 }
 
 int main() {
-    string text = "Hello World! How are you?";
-    string pattern = "How are yo";
     string corpus_full_path = "/home/yaman/CLionProjects/cs2-project/corpus";
+    string test_file_full_path = "/home/yaman/CLionProjects/cs2-project/test.txt";
+    string text = "Hello World! How are you?";
+    string pattern = read_pattern_file(test_file_full_path);
 
+    // map<filename, file_content_string> from corpus
     map<string, string> files = return_files(corpus_full_path);
     int index = rabin_karp_search(text, pattern);
 
