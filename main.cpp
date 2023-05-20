@@ -4,8 +4,19 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <chrono>
 
 using namespace std;
+
+#define RUN 1
+
+typedef struct {
+    string file;
+    string sentence;
+    long time_rabin_karp;
+    long time_brute_force;
+    bool found;
+} Record;
 
 int brute_force_search(const string &text, const string &pattern) {
     int n = text.length();
@@ -103,30 +114,71 @@ string read_pattern_file(string &test_file_path) {
     return pattern_string;
 }
 
+// NOTE: tsv was chosen instead of csv since many of the files in the corpus contain commas, which would make parsing
+// the csv file more difficult
+void write_to_tsv(vector<Record>& results, string test_file_path) {
+    ofstream tsv_file;
+    tsv_file.open(test_file_path + "-" + to_string(RUN) + ".tsv");
+    tsv_file << "file\tsentence\ttime_rabin_karp\ttime_brute_force\tfound\n";
+    for (auto result: results) {
+        tsv_file << result.file << "\t" << result.sentence << "\t" << result.time_rabin_karp << "\t"
+                 << result.time_brute_force << "\t" << result.found << "\n";
+    }
+    tsv_file.close();
+}
+
 int main() {
     string corpus_full_path = "/home/yaman/CLionProjects/cs2-project/corpus";
     string test_file_full_path = "/home/yaman/CLionProjects/cs2-project/test.txt";
     vector<string> pattern_sentences_v = split_paragraph_into_sentences(read_pattern_file(test_file_full_path));
     // map<filename, file_content_string> from corpus
     map<string, string> files_map = return_files(corpus_full_path);
+    // vector<tuple<file, sentence, time_rabin_karp, time_brute_force, found>>
+    vector<Record> results;
 
     for (auto pattern_sentence: pattern_sentences_v) {
         bool found = false;
         for (auto file: files_map) {
-            // calculate time for searching
+            // time rabin karp in nano seconds
+            auto time_rabin_karp = chrono::high_resolution_clock::now();
             int index = rabin_karp_search(file.second, pattern_sentence);
+            auto time_rabin_karp_end = chrono::high_resolution_clock::now();
+            auto time_rabin_karp_duration = chrono::duration_cast<chrono::nanoseconds>(
+                    time_rabin_karp_end - time_rabin_karp).count();
+
+            // time brute force in nano seconds
+            auto time_brute_force = chrono::high_resolution_clock::now();
             int index_brute = brute_force_search(file.second, pattern_sentence);
+            auto time_brute_force_end = chrono::high_resolution_clock::now();
+            auto time_brute_force_duration = chrono::duration_cast<chrono::nanoseconds>(
+                    time_brute_force_end - time_brute_force).count();
+
             if (index != -1) {
                 cout << "Sentence: " << pattern_sentence << "\nwas found at index " << index << " in file: "
                      << file.first << "\n\n";
-//                cout << "Sentence: " << pattern_sentence << "\nwas found at index " << index_brute << " in file: "
-//                     << file.first << "\n\n";
                 found = true;
+                results.push_back(
+                        {file.first, // file
+                         pattern_sentence, // sentence
+                         time_rabin_karp_duration, // time_rabin_karp
+                         time_brute_force_duration, // time_brute_force
+                         true} // found
+                );
+            } else {
+                results.push_back(
+                        {file.first, // file
+                         pattern_sentence, // sentence
+                         time_rabin_karp_duration, // time_rabin_karp
+                         time_brute_force_duration, // time_brute_force
+                         false} // found
+                );
             }
         }
         if (!found) {
             cout << "Pattern \"" << pattern_sentence << "\" not found in any file" << endl;
         }
     }
+
+    write_to_tsv(results, test_file_full_path);
     return 0;
 }
