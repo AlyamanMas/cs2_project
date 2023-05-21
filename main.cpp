@@ -8,7 +8,7 @@
 
 using namespace std;
 
-#define RUN 1
+#define RUN 6
 
 typedef struct {
     string file;
@@ -116,7 +116,7 @@ string read_pattern_file(string &test_file_path) {
 
 // NOTE: tsv was chosen instead of csv since many of the files in the corpus contain commas, which would make parsing
 // the csv file more difficult
-void write_to_tsv(vector<Record>& results, string test_file_path) {
+void write_to_tsv(vector<Record> &results, string test_file_path) {
     ofstream tsv_file;
     tsv_file.open(test_file_path + "-" + to_string(RUN) + ".tsv");
     tsv_file << "file\tsentence\ttime_rabin_karp\ttime_brute_force\tfound\n";
@@ -130,7 +130,9 @@ void write_to_tsv(vector<Record>& results, string test_file_path) {
 int main() {
     string corpus_full_path = "/home/yaman/CLionProjects/cs2-project/corpus";
     string test_file_full_path = "/home/yaman/CLionProjects/cs2-project/test.txt";
-    vector<string> pattern_sentences_v = split_paragraph_into_sentences(read_pattern_file(test_file_full_path));
+    vector<string> pattern_sentences_v = split_paragraph_into_sentences(
+            read_pattern_file(test_file_full_path)
+    );
     // map<filename, file_content_string> from corpus
     map<string, string> files_map = return_files(corpus_full_path);
     // vector<tuple<file, sentence, time_rabin_karp, time_brute_force, found>>
